@@ -1,29 +1,65 @@
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: grafanatorifirstapp-pv-volume
+  name: grafanatorifirstapp-pv-dashboards
   labels:
-    type: local
+    data-type: dashboards
 spec:
-  storageClassName: default
   capacity:
     storage: 100M
   accessModes:
-    - ReadWriteOnce
+  - ReadWriteOnce
+  storageClassName: ""
   hostPath:
-    path: "/mnt/c/Github/ToriFirstAppGrafana/Dashboards"
+    path: /c/Github/ToriFirstAppGrafana/Dashboards
+    type: DirectoryOrCreate
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: grafanatorifirstapp-pv-datasources
+  labels:
+    data-type: datasources
+spec:
+  capacity:
+    storage: 100M
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: ""
+  hostPath:
+    path: /c/Github/ToriFirstAppGrafana/DataSources
+    type: DirectoryOrCreate
+
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: grafanatorifirstapp-pv-claim
+  name: grafanatorifirstapp-pv-claim-dashboards
 spec:
-  storageClassName: default
+  storageClassName: ""
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 50M
+      storage: 100M
+  selector: 
+    matchLabels:
+      data-type: dashboards
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: grafanatorifirstapp-pv-claim-datasources
+spec:
+  storageClassName: ""
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100M
+  selector: 
+    matchLabels:
+      data-type: datasources
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -84,15 +120,20 @@ spec:
         volumeMounts:
         - name: grafana-persistent-storage
           mountPath: /var/lib/grafana
-        - name: grafanatorifirstapp-pv-storage
-          mountPath: /etc/grafana/provisioning
-
+        - name: grafanatorifirstapp-pv-dashboards
+          mountPath: /etc/grafana/provisioning/dashboards
+        - name: grafanatorifirstapp-pv-datasources
+          mountPath: /etc/grafana/provisioning/datasources
       volumes:
+      - name: grafanatorifirstapp-pv-dashboards
+        persistentVolumeClaim:
+          claimName: grafanatorifirstapp-pv-claim-dashboards
+      - name: grafanatorifirstapp-pv-datasources
+        persistentVolumeClaim:
+          claimName: grafanatorifirstapp-pv-claim-datasources
       - name: grafana-persistent-storage
         emptyDir: {}
-      - name: grafanatorifirstapp-pv-storage
-        persistentVolumeClaim:
-         claimName: grafanatorifirstapp-pv-claim
+      
 ---
 apiVersion: v1
 kind: Secret
