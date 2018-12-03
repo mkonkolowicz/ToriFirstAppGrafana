@@ -9,27 +9,9 @@ spec:
     storage: 100M
   accessModes:
   - ReadWriteOnce
-  # storageClassName: ""
   hostPath:
     path: /c/Github/ToriFirstAppGrafana/Provisioning
     type: DirectoryOrCreate
----
-# kind: PersistentVolume
-# apiVersion: v1
-# metadata:
-#   name: grafanatorifirstapp-pv-datasources
-#   labels:
-#     data-type: datasources
-# spec:
-#   capacity:
-#     storage: 100M
-#   accessModes:
-#   - ReadWriteOnce
-#   storageClassName: ""
-#   hostPath:
-#     path: /c/Github/ToriFirstAppGrafana/DataSources
-#     type: DirectoryOrCreate
-
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -46,21 +28,6 @@ spec:
     matchLabels:
       data-type: provisioning
 ---
-# kind: PersistentVolumeClaim
-# apiVersion: v1
-# metadata:
-#   name: grafanatorifirstapp-pv-claim-datasources
-# spec:
-#   storageClassName: ""
-#   accessModes:
-#     - ReadWriteOnce
-#   resources:
-#     requests:
-#       storage: 100M
-#   selector: 
-#     matchLabels:
-#       data-type: datasources
-# ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -106,34 +73,21 @@ spec:
                 key: admin-password
           - name: GF_AUTH_ANONYMOUS_ENABLED
             value: "false"
-          # - name: GF_AUTH_ANONYMOUS_ORG_ROLE
-          #   value: Admin
-          # does not really work, because of template variables in exported dashboards:
-          # - name: GF_DASHBOARDS_JSON_ENABLED
-          #   value: "true"
         readinessProbe:
           httpGet:
             path: /login
             port: 3000
-          # initialDelaySeconds: 30
-          # timeoutSeconds: 1
         volumeMounts:
         - name: grafana-persistent-storage
           mountPath: /var/lib/grafana
         - name: grafanatorifirstapp-pv-provisioning
           mountPath: /etc/grafana/provisioning
-        # - name: grafanatorifirstapp-pv-datasources
-        #   mountPath: /etc/grafana/provisioning/datasources
       volumes:
       - name: grafanatorifirstapp-pv-provisioning
         persistentVolumeClaim:
           claimName: grafanatorifirstapp-pv-claim-provisioning
-      # - name: grafanatorifirstapp-pv-datasources
-      #   persistentVolumeClaim:
-      #     claimName: grafanatorifirstapp-pv-claim-datasources
       - name: grafana-persistent-storage
         emptyDir: {}
-      
 ---
 apiVersion: v1
 kind: Secret
